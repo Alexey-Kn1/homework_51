@@ -1,0 +1,28 @@
+{
+  "cards": [
+    {
+      "card": {
+        "number": "0000-0000-0000-0001",
+        "validUntil": "03/26",
+        "cvv": "000"
+      },
+      "balance": {
+        "value": 500,
+        "currency": "RUB"
+      }
+    },
+    {
+      "card": {
+        "number": "0000-0000-0000-0000",
+        "validUntil": "03/23",
+        "cvv": "000"
+      },
+      "balance": {
+        "value": 500,
+        "currency": "RUB"
+      }
+    }
+  ],
+  "openedTransfers": {},
+  "freeOperationId": 0
+}

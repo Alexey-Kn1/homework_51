@@ -1,0 +1,6 @@
+services:
+  app:
+    image: app
+    ports:
+      - "5500:5500"
+    container_name: app
