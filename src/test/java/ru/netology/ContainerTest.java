@@ -66,13 +66,13 @@ class ContainerTest {
 
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, transferRespErr.getStatusCode());
 
-        var confirmation = new OperationConfirmationRequest(transferCreationResponse.getOperationId(), DEFAULT_VERIFICATION_CODE + "ЫЫЫЫЫ"); // Wrong code.
+        var confirmation = new OperationConfirmationRequest(transferCreationResponse.operationId(), DEFAULT_VERIFICATION_CODE + "ЫЫЫЫЫ"); // Wrong code.
 
         var confirmRespErr = restTemplate.postForEntity(addr + "/confirmOperation", confirmation, ErrorResponse.class);
 
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, confirmRespErr.getStatusCode());
 
-        confirmation = new OperationConfirmationRequest(transferCreationResponse.getOperationId(), DEFAULT_VERIFICATION_CODE);
+        confirmation = new OperationConfirmationRequest(transferCreationResponse.operationId(), DEFAULT_VERIFICATION_CODE);
 
         var confirmRespSuccess = restTemplate.postForEntity(addr + "/confirmOperation", confirmation, OperationConfirmationResponse.class);
 
@@ -106,12 +106,12 @@ class ContainerTest {
 
         Assertions.assertEquals(HttpStatus.OK, transferRespSuccess.getStatusCode());
 
-        confirmation = new OperationConfirmationRequest(transferRespSuccess.getBody().getOperationId(), DEFAULT_VERIFICATION_CODE);
+        confirmation = new OperationConfirmationRequest(transferRespSuccess.getBody().operationId(), DEFAULT_VERIFICATION_CODE);
 
         confirmRespSuccess = restTemplate.postForEntity(addr + "/confirmOperation", confirmation, OperationConfirmationResponse.class);
 
         Assertions.assertEquals(HttpStatus.OK, confirmRespSuccess.getStatusCode());
 
-        Assertions.assertEquals(transferRespSuccess.getBody().getOperationId(), confirmRespSuccess.getBody().getOperationId());
+        Assertions.assertEquals(transferRespSuccess.getBody().operationId(), confirmRespSuccess.getBody().operationId());
     }
 }

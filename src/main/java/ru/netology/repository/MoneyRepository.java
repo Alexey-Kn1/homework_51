@@ -131,7 +131,7 @@ public class MoneyRepository {
     public BankCard getCard(String number) {
         return balances.keySet()
                 .stream()
-                .filter(c -> c.getNumber().equals(number))
+                .filter(c -> c.number().equals(number))
                 .findAny()
                 .orElse(null);
     }
@@ -155,10 +155,10 @@ public class MoneyRepository {
             throw new OperationNotFoundById(operationId);
         }
 
-        var sourceBalance = getBalance(transfer.getSource());
-        var destinationBalance = getBalance(transfer.getDestination());
+        var sourceBalance = getBalance(transfer.source());
+        var destinationBalance = getBalance(transfer.destination());
 
-        var delta = transfer.getAmount().getValue();
+        var delta = transfer.amount().getValue();
 
         sourceBalance.setValue(sourceBalance.getValue() - delta);
         destinationBalance.setValue(destinationBalance.getValue() + delta);
@@ -183,7 +183,7 @@ public class MoneyRepository {
     public Transfer getTransfer(BankCard source) {
         return openedTransfers.values()
                 .stream()
-                .filter(t -> t.getSource().equals(source))
+                .filter(t -> t.source().equals(source))
                 .findAny()
                 .orElse(null);
     }

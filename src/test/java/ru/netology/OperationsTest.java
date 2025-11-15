@@ -87,7 +87,7 @@ public class OperationsTest {
 
         var transferCreationResponse = gson.fromJson(responseBody, MoneyTransferResponse.class);
 
-        var confirmation = new OperationConfirmationRequest(transferCreationResponse.getOperationId(), code + "ЫЫЫЫЫ"); // Wrong code.
+        var confirmation = new OperationConfirmationRequest(transferCreationResponse.operationId(), code + "ЫЫЫЫЫ"); // Wrong code.
 
         mvc.perform(
                         post("/confirmOperation")
@@ -96,7 +96,7 @@ public class OperationsTest {
                 )
                 .andExpect(status().isBadRequest());
 
-        confirmation = new OperationConfirmationRequest(transferCreationResponse.getOperationId(), code);
+        confirmation = new OperationConfirmationRequest(transferCreationResponse.operationId(), code);
 
         responseBody = mvc.perform(
                         post("/confirmOperation")
@@ -110,7 +110,7 @@ public class OperationsTest {
 
         var confirmationResponse = gson.fromJson(responseBody, OperationConfirmationResponse.class);
 
-        Assertions.assertEquals(confirmationResponse.getOperationId(), transferCreationResponse.getOperationId());
+        Assertions.assertEquals(confirmationResponse.operationId(), transferCreationResponse.operationId());
 
         // Operation has already been confirmed.
         mvc.perform(
@@ -152,7 +152,7 @@ public class OperationsTest {
 
         transferCreationResponse = gson.fromJson(responseBody, MoneyTransferResponse.class);
 
-        confirmation = new OperationConfirmationRequest(transferCreationResponse.getOperationId(), code);
+        confirmation = new OperationConfirmationRequest(transferCreationResponse.operationId(), code);
 
         responseBody = mvc.perform(
                         post("/confirmOperation")
@@ -166,6 +166,6 @@ public class OperationsTest {
 
         confirmationResponse = gson.fromJson(responseBody, OperationConfirmationResponse.class);
 
-        Assertions.assertEquals(confirmationResponse.getOperationId(), transferCreationResponse.getOperationId());
+        Assertions.assertEquals(confirmationResponse.operationId(), transferCreationResponse.operationId());
     }
 }

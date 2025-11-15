@@ -1,6 +1,5 @@
 package ru.netology;
 
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -38,10 +37,10 @@ public class ServiceTest {
 
         var respTransfer = service.createTransfer(
                 new MoneyTransferRequest(
-                        CARD_A.getNumber(),
-                        CARD_A.getValidUntil(),
-                        CARD_A.getCvv(),
-                        CARD_B.getNumber(),
+                        CARD_A.number(),
+                        CARD_A.validUntil(),
+                        CARD_A.cvv(),
+                        CARD_B.number(),
                         new MoneyQuantity(
                                 500,
                                 "RUB"
@@ -76,7 +75,7 @@ public class ServiceTest {
         try {
             service.confirmTransfer(
                     new OperationConfirmationRequest(
-                            ((MoneyTransferResponse) respTransfer.getBody()).getOperationId(),
+                            ((MoneyTransferResponse) respTransfer.getBody()).operationId(),
                             "INVALID_CODE"
                     )
             );
@@ -88,7 +87,7 @@ public class ServiceTest {
 
         respConfirm = service.confirmTransfer(
                 new OperationConfirmationRequest(
-                        ((MoneyTransferResponse) respTransfer.getBody()).getOperationId(),
+                        ((MoneyTransferResponse) respTransfer.getBody()).operationId(),
                         env.getProperty("transfers_verification_code")
                 )
         );
@@ -100,10 +99,10 @@ public class ServiceTest {
         try {
             service.createTransfer(
                     new MoneyTransferRequest(
-                            CARD_A.getNumber(),
-                            CARD_A.getValidUntil(),
-                            CARD_A.getCvv(),
-                            CARD_B.getNumber(),
+                            CARD_A.number(),
+                            CARD_A.validUntil(),
+                            CARD_A.cvv(),
+                            CARD_B.number(),
                             new MoneyQuantity(
                                     501,
                                     "RUB"
@@ -120,10 +119,10 @@ public class ServiceTest {
     private static MoneyRepository prepareRepositoryMock() {
         var mock = Mockito.mock(MoneyRepository.class);
 
-        Mockito.when(mock.getCard(CARD_A.getNumber()))
+        Mockito.when(mock.getCard(CARD_A.number()))
                 .thenReturn(CARD_A);
 
-        Mockito.when(mock.getCard(CARD_B.getNumber()))
+        Mockito.when(mock.getCard(CARD_B.number()))
                 .thenReturn(CARD_B);
 
         Mockito.when(mock.getTransfer(CARD_A))
