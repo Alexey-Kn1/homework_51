@@ -1,5 +1,6 @@
 package ru.netology;
 
+import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -7,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import ru.netology.model.*;
 import ru.netology.repository.MoneyRepository;
 import ru.netology.service.MoneyTransferService;
@@ -49,7 +51,7 @@ public class ServiceTest {
 
         Assertions.assertEquals(HttpStatus.OK, respTransfer.getStatusCode());
 
-        Assertions.assertInstanceOf(MoneyTransferResponseSuccess.class, respTransfer.getBody());
+        Assertions.assertInstanceOf(MoneyTransferResponse.class, respTransfer.getBody());
 
         Mockito.verify(
                         repoMock,
@@ -69,44 +71,50 @@ public class ServiceTest {
                 )
                 .confirmTransfer(Mockito.any(String.class));
 
-        var respConfirm = service.confirmTransfer(
-                new OperationConfirmationRequest(
-                        ((MoneyTransferResponseSuccess) respTransfer.getBody()).getOperationId(),
-                        "INVALID_CODE"
-                )
-        );
+        ResponseEntity<OperationConfirmationResponse> respConfirm;
 
-        Assertions.assertEquals(HttpStatus.BAD_REQUEST, respConfirm.getStatusCode());
+        try {
+            service.confirmTransfer(
+                    new OperationConfirmationRequest(
+                            ((MoneyTransferResponse) respTransfer.getBody()).getOperationId(),
+                            "INVALID_CODE"
+                    )
+            );
 
-        Assertions.assertInstanceOf(OperationConfirmationResponseError.class, respConfirm.getBody());
+            Assertions.fail("transfer should not be confirmed by request with wrong confirmation code");
+        } catch (WrongInputDataException e) {
+            Assertions.assertEquals(1, e.getId());
+        }
 
         respConfirm = service.confirmTransfer(
                 new OperationConfirmationRequest(
-                        ((MoneyTransferResponseSuccess) respTransfer.getBody()).getOperationId(),
+                        ((MoneyTransferResponse) respTransfer.getBody()).getOperationId(),
                         env.getProperty("transfers_verification_code")
                 )
         );
 
         Assertions.assertEquals(HttpStatus.OK, respConfirm.getStatusCode());
 
-        Assertions.assertInstanceOf(OperationConfirmationResponseSuccess.class, respConfirm.getBody());
+        Assertions.assertInstanceOf(OperationConfirmationResponse.class, respConfirm.getBody());
 
-        respTransfer = service.createTransfer(
-                new MoneyTransferRequest(
-                        CARD_A.getNumber(),
-                        CARD_A.getValidUntil(),
-                        CARD_A.getCvv(),
-                        CARD_B.getNumber(),
-                        new MoneyQuantity(
-                                501,
-                                "RUB"
-                        )
-                )
-        );
+        try {
+            service.createTransfer(
+                    new MoneyTransferRequest(
+                            CARD_A.getNumber(),
+                            CARD_A.getValidUntil(),
+                            CARD_A.getCvv(),
+                            CARD_B.getNumber(),
+                            new MoneyQuantity(
+                                    501,
+                                    "RUB"
+                            )
+                    )
+            );
 
-        Assertions.assertEquals(HttpStatus.BAD_REQUEST, respTransfer.getStatusCode());
-
-        Assertions.assertInstanceOf(MoneyTransferResponseError.class, respTransfer.getBody());
+            Assertions.fail("transfer should not be created without enough balance");
+        } catch (WrongInputDataException e) {
+            Assertions.assertEquals(4, e.getId());
+        }
     }
 
     private static MoneyRepository prepareRepositoryMock() {

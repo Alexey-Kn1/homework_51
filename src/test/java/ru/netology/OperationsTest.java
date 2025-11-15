@@ -85,7 +85,7 @@ public class OperationsTest {
                 )
                 .andExpect(status().isBadRequest());
 
-        var transferCreationResponse = gson.fromJson(responseBody, MoneyTransferResponseSuccess.class);
+        var transferCreationResponse = gson.fromJson(responseBody, MoneyTransferResponse.class);
 
         var confirmation = new OperationConfirmationRequest(transferCreationResponse.getOperationId(), code + "ЫЫЫЫЫ"); // Wrong code.
 
@@ -108,7 +108,7 @@ public class OperationsTest {
                 .getResponse()
                 .getContentAsString();
 
-        var confirmationResponse = gson.fromJson(responseBody, OperationConfirmationResponseSuccess.class);
+        var confirmationResponse = gson.fromJson(responseBody, OperationConfirmationResponse.class);
 
         Assertions.assertEquals(confirmationResponse.getOperationId(), transferCreationResponse.getOperationId());
 
@@ -150,7 +150,7 @@ public class OperationsTest {
                 .getResponse()
                 .getContentAsString();
 
-        transferCreationResponse = gson.fromJson(responseBody, MoneyTransferResponseSuccess.class);
+        transferCreationResponse = gson.fromJson(responseBody, MoneyTransferResponse.class);
 
         confirmation = new OperationConfirmationRequest(transferCreationResponse.getOperationId(), code);
 
@@ -164,7 +164,7 @@ public class OperationsTest {
                 .getResponse()
                 .getContentAsString();
 
-        confirmationResponse = gson.fromJson(responseBody, OperationConfirmationResponseSuccess.class);
+        confirmationResponse = gson.fromJson(responseBody, OperationConfirmationResponse.class);
 
         Assertions.assertEquals(confirmationResponse.getOperationId(), transferCreationResponse.getOperationId());
     }
