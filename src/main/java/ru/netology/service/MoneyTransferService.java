@@ -22,60 +22,67 @@ public class MoneyTransferService {
     }
 
     public ResponseEntity<MoneyTransferResponse> createTransfer(MoneyTransferRequest request) {
-        var cardSource = new BankCard(request.cardFromNumber(), request.cardFromValidTill(), request.cardFromCVV());
+        ResponseEntity<MoneyTransferResponse> res;
+        BankCard cardSource;
+        BankCard cardDestination;
+        MoneyTransferResponse responseData;
 
-        var existingTransfer = repo.getTransfer(cardSource);
+        synchronized (repo) {
+            cardSource = new BankCard(request.cardFromNumber(), request.cardFromValidTill(), request.cardFromCVV());
 
-        if (existingTransfer != null) {
-            throw new WrongInputDataException("Not approved transfer from the same card found", 1);
-        }
+            var existingTransfer = repo.getTransfer(cardSource);
 
-        var sourceCardBalance = repo.getBalance(cardSource);
+            if (existingTransfer != null) {
+                throw new WrongInputDataException("Not approved transfer from the same card found", 1);
+            }
 
-        if (!sourceCardBalance.getCurrency().equals(request.amount().getCurrency())) {
-            throw new WrongInputDataException(
-                    String.format(
-                            "Source card has different currency: \"%s\"; requested: \"%s\"",
-                            sourceCardBalance.getCurrency(),
-                            request.amount().getCurrency()
-                    ),
-                    2
+            var sourceCardBalance = repo.getBalance(cardSource);
+
+            if (!sourceCardBalance.getCurrency().equals(request.amount().getCurrency())) {
+                throw new WrongInputDataException(
+                        String.format(
+                                "Source card has different currency: \"%s\"; requested: \"%s\"",
+                                sourceCardBalance.getCurrency(),
+                                request.amount().getCurrency()
+                        ),
+                        2
+                );
+            }
+
+            cardDestination = repo.getCard(request.cardToNumber());
+
+            var destinationCardBalance = repo.getBalance(cardDestination);
+
+            if (!destinationCardBalance.getCurrency().equals(request.amount().getCurrency())) {
+                throw new WrongInputDataException(
+                        String.format(
+                                "Destination card has different currency: \"%s\"; requested: \"%s\"",
+                                destinationCardBalance.getCurrency(),
+                                request.amount().getCurrency()
+                        ),
+                        3
+                );
+            }
+
+            if (sourceCardBalance.getValue() < request.amount().getValue()) {
+                throw new WrongInputDataException(
+                        "Not enough balance",
+                        4
+                );
+            }
+
+            responseData = new MoneyTransferResponse(
+                    repo.saveTransfer(
+                            new Transfer(
+                                    cardSource,
+                                    cardDestination,
+                                    request.amount()
+                            )
+                    )
             );
+
+            res = new ResponseEntity<>(responseData, HttpStatus.OK);
         }
-
-        var cardDestination = repo.getCard(request.cardToNumber());
-
-        var destinationCardBalance = repo.getBalance(cardDestination);
-
-        if (!destinationCardBalance.getCurrency().equals(request.amount().getCurrency())) {
-            throw new WrongInputDataException(
-                    String.format(
-                            "Destination card has different currency: \"%s\"; requested: \"%s\"",
-                            destinationCardBalance.getCurrency(),
-                            request.amount().getCurrency()
-                    ),
-                    3
-            );
-        }
-
-        if (sourceCardBalance.getValue() < request.amount().getValue()) {
-            throw new WrongInputDataException(
-                    "Not enough balance",
-                    4
-            );
-        }
-
-        var responseData = new MoneyTransferResponse(
-                repo.saveTransfer(
-                        new Transfer(
-                                cardSource,
-                                cardDestination,
-                                request.amount()
-                        )
-                )
-        );
-
-        ResponseEntity<MoneyTransferResponse> res = new ResponseEntity<>(responseData, HttpStatus.OK);
 
         log.info(
                 String.format(
@@ -92,26 +99,30 @@ public class MoneyTransferService {
     }
 
     public synchronized ResponseEntity<OperationConfirmationResponse> confirmTransfer(OperationConfirmationRequest request) {
-        if (!request.code().equals(env.getProperty("transfers_verification_code", ""))) {
-            throw new WrongInputDataException(
-                    "Wrong code",
-                    1
+        ResponseEntity<OperationConfirmationResponse> res;
+
+        synchronized (repo) {
+            if (!request.code().equals(env.getProperty("transfers_verification_code", ""))) {
+                throw new WrongInputDataException(
+                        "Wrong code",
+                        1
+                );
+            }
+
+            try {
+                repo.confirmTransfer(request.operationId());
+            } catch (OperationNotFoundById e) {
+                throw new WrongInputDataException(
+                        "Operation not found by ID",
+                        2
+                );
+            }
+
+            res = new ResponseEntity<>(
+                    new OperationConfirmationResponse(request.operationId()),
+                    HttpStatus.OK
             );
         }
-
-        try {
-            repo.confirmTransfer(request.operationId());
-        } catch (OperationNotFoundById e) {
-            throw new WrongInputDataException(
-                    "Operation not found by ID",
-                    2
-            );
-        }
-
-        ResponseEntity<OperationConfirmationResponse> res = new ResponseEntity<>(
-                new OperationConfirmationResponse(request.operationId()),
-                HttpStatus.OK
-        );
 
         log.info(
                 String.format(
