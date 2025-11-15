@@ -32,7 +32,7 @@ public class StoredData {
         var res = new HashMap<BankCard, MoneyQuantity>(cards.size());
 
         for (var storedPresentation : cards) {
-            res.put(storedPresentation.getCard(), storedPresentation.getBalance());
+            res.put(storedPresentation.card(), storedPresentation.balance());
         }
 
         return res;
